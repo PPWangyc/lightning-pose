@@ -53,6 +53,7 @@ ALLOWED_BACKBONES = Literal[
     "efficientnet_b2",
     # "vit_h_sam",
     "vit_b_sam",
+    "vit_cm"
 ]
 
 
@@ -182,7 +183,7 @@ class BaseFeatureExtractor(LightningModule):
 
         self.backbone_arch = backbone
 
-        if "sam" in self.backbone_arch:
+        if "sam" in self.backbone_arch or "vit_cm" in self.backbone_arch:
             from lightning_pose.models.backbones.vits import build_backbone
         else:
             from lightning_pose.models.backbones.torchvision import build_backbone
@@ -347,7 +348,6 @@ class BaseFeatureExtractor(LightningModule):
             # incoming batch: singleview labeled/unlabeled, multiview labeled/unlabeled reshaped
             # incoming shape: (batch, channels, height, width)
             representations = self.backbone(images)
-
         return representations
 
     def forward(

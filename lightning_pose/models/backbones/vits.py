@@ -1,10 +1,12 @@
 from functools import partial
+import yaml
+from pathlib import Path
 
 import torch
 from typeguard import typechecked
 
 from lightning_pose.models.backbones.vit_img_encoder import ImageEncoderViT_FT
-
+from lightning_pose.models.backbones.vit_cm import ImageEncoderViTContrast
 # to ignore imports for sphix-autoapidoc
 __all__ = [
     "build_backbone",
@@ -87,6 +89,13 @@ def build_backbone(backbone_arch: str, image_size: int = 256, **kwargs):
             out_chans=prompt_embed_dim,
         )
         base.load_state_dict(new_state_dict, strict=False)
+
+    elif "vit_cm" in backbone_arch:
+        # read config from yaml file
+        config_path = Path(__file__).parent / "config/vit_cm.yaml"
+        with open(config_path, "r") as f:
+            config = yaml.safe_load(f)
+        base = ImageEncoderViTContrast(config=config)
 
     else:
         raise NotImplementedError
