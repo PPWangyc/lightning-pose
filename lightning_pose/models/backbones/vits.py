@@ -90,13 +90,29 @@ def build_backbone(backbone_arch: str, image_size: int = 256, **kwargs):
         )
         base.load_state_dict(new_state_dict, strict=False)
 
-    elif "vit_cm" in backbone_arch:
+    elif "vit_cm" in backbone_arch or  "vit_m" in backbone_arch:
         # read config from yaml file
         config_path = Path(__file__).parent / "config/vit_cm.yaml"
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
         base = ImageEncoderViTContrast(config=config)
-
+        # 1. load pretrained IM MAE wights, ignore the unmatched keys
+        base.vit_encoder.from_pretrained("facebook/vit-mae-base")
+        if '77' in backbone_arch:
+            ckpt_url = "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_cm_77.pth"
+        # 2. load neck weights from SAM
+        ckpt_url = "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth"
+        state_dict = torch.hub.load_state_dict_from_url(ckpt_url)
+        neck_state_dict = {}
+        for key in state_dict:
+            if "neck" in key:
+                new_key = key.replace('image_encoder.neck.', '')
+                neck_state_dict[new_key] = state_dict[key]
+        base.neck.load_state_dict(neck_state_dict, strict=True)
+        # unfreeze the parameters
+        base.train()
+        for param in base.parameters():
+            param.requires_grad = True
     else:
         raise NotImplementedError
 

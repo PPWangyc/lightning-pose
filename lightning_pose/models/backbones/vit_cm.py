@@ -58,10 +58,51 @@ class ImageEncoderViTContrast(nn.Module):
         ).last_hidden_state
         # skip the cls token
         outputs = outputs[:, 1:, ...] # [N, S, D]
-        # change the shape to [N, D, H, W]
+        # change the shape to [N, H, W, D] -> [N, D, H, W]
         S = outputs.shape[1]
         H, W = math.isqrt(S), math.isqrt(S)
-        outputs = outputs.permute(0, 2, 1).reshape(N, self.config['hidden_size'], H, W)
+        outputs = outputs.reshape(N, H, W, -1).permute(0, 3, 1, 2)
+        outputs = self.neck(outputs)
+        return outputs
+    
+class ImageEncoderViT(nn.Module):
+    def __init__(self, config):
+        super().__init__() # Initialize parent nn.Module firsts
+        self.vit_encoder = ContrastViTMAE(config).vit_mae.vit
+        self.config = config
+        self.neck = nn.Sequential(
+            nn.Conv2d(
+                config['hidden_size'],
+                config['output_channels'],
+                kernel_size=1,
+                bias=False,
+            ),
+            LayerNorm2d(config['output_channels']),
+            nn.Conv2d(
+                config['output_channels'],
+                config['output_channels'],
+                kernel_size=3,
+                padding=1,
+                bias=False,
+            ),
+            LayerNorm2d(config['output_channels']),
+        )
+
+    def forward(self, x):
+        N = x.shape[0]
+        
+        if self.config['num_channels'] == 1:
+            # adjust input channels to 1
+            x = x[:, 0, ...].unsqueeze(1)
+        outputs =  self.vit_encoder(
+            pixel_values=x,
+        ).last_hidden_state
+        # skip the cls token
+        outputs = outputs[:, 1:, ...] # [N, S, D]
+        # change the shape to [N, H, W, D]
+        S = outputs.shape[1]
+        H, W = math.isqrt(S), math.isqrt(S)
+        outputs = outputs.reshape(N, H, W, -1).permute(0, 3, 1, 2)
         outputs = self.neck(outputs)
         return outputs
 
