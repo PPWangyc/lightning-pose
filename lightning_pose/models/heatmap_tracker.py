@@ -246,7 +246,7 @@ class HeatmapTracker(BaseSupervisedTracker):
             )
         )  # up to here results in downsample_factor=3
         n_layers_to_build = 4 - self.downsample_factor - 1
-        if self.backbone_arch in ["vit_h_sam", "vit_b_sam"] or "vit" in self.backbone_arch:
+        if self.backbone_arch in ["vit_h_sam", "vit_b_sam"] or "vit" in self.backbone_arch or self.backbone_arch == 'vic-mae':
             n_layers_to_build = -1
         for _ in range(n_layers_to_build):
             # add upsampling layer to account for heatmap downsampling

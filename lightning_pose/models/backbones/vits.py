@@ -94,12 +94,14 @@ def build_backbone(backbone_arch: str, image_size: int = 256, model_path: str = 
         base.load_state_dict(new_state_dict, strict=False)
         # remove the neck in the base
         del base.neck
-    elif "vit" in backbone_arch and "m" in backbone_arch:
+    elif "vit" in backbone_arch and "m" in backbone_arch or backbone_arch == 'vic-mae':
         print(f"Loading VIT-MAE backbone from {model_path}")
         # read config from yaml file
         config_path = Path(__file__).parent / "config/vit_mae.yaml"
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
+        # if backbone_arch == 'vic-mae':
+        #     config['num_channels'] = 1
         base = ImageEncoderViTMAE(config=config)
         # 1. load pretrained IM MAE wights, ignore the unmatched keys
         base.vit_mae.from_pretrained("facebook/vit-mae-base")

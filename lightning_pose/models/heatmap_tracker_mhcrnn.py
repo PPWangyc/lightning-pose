@@ -101,7 +101,7 @@ class HeatmapTrackerMHCRNN(HeatmapTracker):
         self.crnn = UpsamplingCRNN(
             num_filters_for_upsampling=self.num_filters_for_upsampling,
             num_keypoints=self.num_keypoints,
-            upsampling_factor=1 if "vit" in backbone else 2,
+            upsampling_factor=1 if "vit" in backbone or backbone == 'vic-mae' else 2,
         )
         self.upsampling_layers_rnn = self.crnn.layers
 

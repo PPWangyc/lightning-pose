@@ -112,7 +112,8 @@ ALLOWED_BACKBONES = Literal[
     "vit_b_sam",
     "vit_mae",
     "vit_m",
-    "vit_cm"
+    "vit_cm",
+    "vic-mae"
 ]
 
 
@@ -248,7 +249,7 @@ class BaseFeatureExtractor(LightningModule):
 
         self.backbone_arch = backbone
 
-        if self.backbone_arch in ['vit_b_sam', 'vit_mae', 'vit_m', 'vit_cm']:
+        if self.backbone_arch in ['vit_b_sam', 'vit_mae', 'vit_m', 'vit_cm', 'vic-mae']:
             from lightning_pose.models.backbones.vits import build_backbone
         else:
             from lightning_pose.models.backbones.torchvision import build_backbone

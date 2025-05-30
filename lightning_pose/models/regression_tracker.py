@@ -59,7 +59,7 @@ class RegressionTracker(BaseSupervisedTracker):
         # for reproducible weight initialization
         torch.manual_seed(torch_seed)
 
-        if "vit" in backbone:
+        if "vit" in backbone or backbone == 'vic-mae':
             raise ValueError("Regression trackers are not compatible with ViT backbones")
 
         # for backwards compatibility

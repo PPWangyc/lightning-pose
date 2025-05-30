@@ -57,10 +57,10 @@ class ImageEncoderViTMAE(nn.Module):
     def forward(self, x):
         N = x.shape[0]
         if self.config['num_channels'] == 1:
-            print('num_channels is 1, should be 3')
+            # print('num_channels is 1, should be 3')
             # adjust input channels to 1
             x = x[:, 0, ...].unsqueeze(1)
-            exit()
+            # exit()
         outputs = self.vit_mae(
             pixel_values=x,
             return_latent=True

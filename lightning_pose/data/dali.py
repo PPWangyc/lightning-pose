@@ -331,7 +331,10 @@ class PrepareDALI(object):
         gen_cfg = self.dali_config.get("general", {"seed": 123456})
 
         # base (vanilla single-frame model), train pipe args
+        if "base" not in self.dali_config:
+            self.dali_config["base"] = {'predict': {'sequence_length': 192}, 'train': {'sequence_length': 64}}
         base_train_cfg = self.dali_config["base"]["train"]
+        print(base_train_cfg)
         dict_args["train"]["base"] = {
             "filenames": filenames,
             "resize_dims": self.resize_dims,
@@ -365,6 +368,8 @@ class PrepareDALI(object):
         }
 
         # context (five-frame) model, predict pipe args
+        if "context" not in self.dali_config:
+            self.dali_config["context"] = {'predict': {'sequence_length': 48}, 'train': {'batch_size': 12}}
         context_pred_cfg = self.dali_config["context"]["predict"]
         dict_args["predict"]["context"] = {
             "filenames": filenames,

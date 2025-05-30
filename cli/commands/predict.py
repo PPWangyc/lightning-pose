@@ -97,8 +97,10 @@ def _predict_multi_type(model: "Model", path: Path, skip_viz: bool, overwrite: b
         for p in video_files:
             _predict_multi_type(model, p, skip_viz, overwrite)
     elif path.suffix == ".mp4":
+        print(f"Predicting on {path} with overwrite={overwrite}")
         model.predict_on_video_file(
-            video_file=path, generate_labeled_video=(not skip_viz), overwrite=overwrite
+            video_file=path, generate_labeled_video=(not skip_viz), 
+            # overwrite=overwrite
         )
     elif path.suffix == ".csv":
         model.predict_on_label_csv(

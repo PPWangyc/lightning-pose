@@ -356,7 +356,7 @@ def get_model(
     semi_supervised = io_utils.check_if_semi_supervised(cfg.model.losses_to_use)
     image_h = cfg.data.image_resize_dims.height
     image_w = cfg.data.image_resize_dims.width
-    if "vit" in cfg.model.backbone:
+    if "vit" in cfg.model.backbone or cfg.model.backbone == 'vic-mae':
         if image_h != image_w:
             raise RuntimeError("ViT model requires resized height and width to be equal")
 
