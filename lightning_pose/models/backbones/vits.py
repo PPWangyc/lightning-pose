@@ -64,7 +64,7 @@ def load_vit_backbone_checkpoint(base, checkpoint: str):
     print(f"Loading VIT-MAE weights from {checkpoint}")
     # support loading safetensors
     if checkpoint.endswith(".safetensors"):
-        ckpt_vit_pretrain = safetensors.load_file(checkpoint, device="cpu")
+        ckpt_vit_pretrain = safetensors.torch.load_file(checkpoint, device="cpu")
     else:
         # Try loading with default settings first, fallback to weights_only=False if needed
         try:
@@ -81,19 +81,12 @@ def load_vit_backbone_checkpoint(base, checkpoint: str):
     for key, value in ckpt_vit_pretrain.items():
         if key.startswith("vit_mae."):
             model_key = key.replace("vit_mae.vit.", "")
-            # Skip known problematic layers with size mismatches
-            if any(prob in model_key for prob in [
-                "position_embeddings",
-                "patch_embeddings.projection",  # in case backbone was trained with grayscale imgs
-                "decoder_pos_embed",
-                "decoder_pred",
-            ]):
-                continue
-            # Check if shapes match before including in state dict
             if model_key in base.vision_encoder.state_dict():
                 if base.vision_encoder.state_dict()[model_key].shape == value.shape:
                     vit_mae_state_dict[model_key] = value
-    # Load the filtered weights
+                    print(f"Loaded {model_key} with shape {value.shape}")
+                else:
+                    print(f"Skipping {model_key} because it has a different shape: {base.vision_encoder.state_dict()[model_key].shape} != {value.shape}")
     base.vision_encoder.load_state_dict(vit_mae_state_dict, strict=False)
 
 
