@@ -38,6 +38,8 @@ def build_backbone(backbone_arch: str, image_size: int = 256, **kwargs):
     if "vits_dino" in backbone_arch:
         base = VisionEncoder(model_name="facebook/dino-vits16")
         encoder_embed_dim = base.vision_encoder.config.hidden_size
+        if kwargs.get("backbone_checkpoint"):
+            load_vit_backbone_checkpoint(base, kwargs["backbone_checkpoint"])
     elif "vitb_dino" in backbone_arch:
         base = VisionEncoder(model_name="facebook/dino-vitb16")
         encoder_embed_dim = base.vision_encoder.config.hidden_size
@@ -84,9 +86,23 @@ def load_vit_backbone_checkpoint(base, checkpoint: str):
             if model_key in base.vision_encoder.state_dict():
                 if base.vision_encoder.state_dict()[model_key].shape == value.shape:
                     vit_mae_state_dict[model_key] = value
-                    print(f"Loaded {model_key} with shape {value.shape}")
+                    # print(f"Loaded {model_key} with shape {value.shape}")
                 else:
                     print(f"Skipping {model_key} because it has a different shape: {base.vision_encoder.state_dict()[model_key].shape} != {value.shape}")
+    
+        elif key.startswith("vit"):
+            model_key = key.replace("vit.", "")
+            if model_key in base.vision_encoder.state_dict():
+                if base.vision_encoder.state_dict()[model_key].shape == value.shape:
+                    vit_mae_state_dict[model_key] = value
+                    # print(f"Loaded {model_key} with shape {value.shape}")
+                else:
+                    print(f"Skipping {model_key} because it has a different shape: {base.vision_encoder.state_dict()[model_key].shape} != {value.shape}")
+        # elif key.startswith("view_embeddings"):
+        #     base.view_embeddings = value
+        else:
+            pass
+            print(f"Ignoring {key} because it is not a valid vit key")
     base.vision_encoder.load_state_dict(vit_mae_state_dict, strict=False)
 
 
@@ -95,7 +111,8 @@ class VisionEncoder(torch.nn.Module):
 
     def __init__(self, model_name):
         super().__init__()
-        self.vision_encoder = ViTModel.from_pretrained(model_name, add_pooling_layer=False)
+        self.vision_encoder = ViTModel.from_pretrained(model_name, add_pooling_layer=False, use_safetensors=True)
+        # self.view_embeddings = None
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass through the vision encoder.
