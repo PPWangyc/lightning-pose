@@ -331,10 +331,7 @@ class BEAST3D(ERayZer):
             from transformers import AutoModel
             del self.image_tokenizer
             self.dinov3 = AutoModel.from_pretrained("facebook/dinov3-vitb16-pretrain-lvd1689m")
-            self.dinov3.eval()
-            for param in self.dinov3.parameters():
-                param.requires_grad = False
-            print("BEAST3D: using DINOv3 ViT-base as image tokenizer (frozen)")
+            print("BEAST3D: using DINOv3 ViT-base as image tokenizer (unfrozen)")
 
         # delete the transformer_encoder
         del self.transformer_encoder
@@ -362,8 +359,7 @@ class BEAST3D(ERayZer):
         """Extract image tokens of shape (B*V, N, d) from input images (B, V, C, H, W) in [0, 1] range."""
         if self.use_dinov3:
             imgs_flat = rearrange(images, 'b v c h w -> (b v) c h w')
-            with torch.no_grad():
-                dino_out = self.dinov3(imgs_flat, output_hidden_states=False).last_hidden_state
+            dino_out = self.dinov3(imgs_flat, output_hidden_states=False).last_hidden_state
             num_prefix = 1 + getattr(self.dinov3.config, 'num_register_tokens', 0)
             return dino_out[:, num_prefix:, :]  # (B*V, N, 768)
         else:
